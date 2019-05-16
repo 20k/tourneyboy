@@ -54,6 +54,22 @@ def get_teams_info(x):
 
     return {"teams":teams, "elo":team_elo_total}
 
+def format_users(x):
+    rval = ""
+    for value in x:
+        rval = rval + value + ","
+        
+    if len(rval) > 1:
+        rval = rval[:-1]
+        
+    return rval
+
+async def force_registration(message):
+    backupcontent = message.content
+    message.content = "!register"
+    await on_message(message)
+    message.content = backupcontent
+
 testdict = read()
 
 print(json.dumps(testdict))
@@ -67,27 +83,34 @@ async def on_message(message):
     if message.author == client.user:
         return
         
-    user_header = "User / Team / Elo\n"
+    user_header = "Name / Team / Elo\n"
         
     str_id = str(message.author.id)
     str_name = message.author.name;
     
     if message.content.startswith("!help"):
-        await message.channel.send("```\n!register\n!list\n!join <teamname>\n!teams\n!victory <winningteam> <losingteam>\n!me```")
+        await message.channel.send("```\n!register\n!unregister\n!players\n!join <teamname>\n!teams\n!victory <winningteam> <losingteam>\n!me\n!help```")
         
     if message.content.startswith("!me"):
-        value = testdict["users"][str_id]
-        await message.channel.send("```\n" + user_header + value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"])) + "```")
+        if str_id in testdict["users"]:
+            value = testdict["users"][str_id]
+            await message.channel.send("```\n" + user_header + value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"])) + "```")
+        else:
+            await message.channel.send("Not found, !register first?")
 
     if message.content.startswith("!register"):
-        testdict["users"][str_id] = default_user_state(str_name, testdict)
+        if str_id not in testdict["users"]:
+            testdict["users"][str_id] = default_user_state(str_name, testdict)
+        else:
+            testdict["users"][str_id]["name"] = str_name
+            
         write(testdict)
         await message.channel.send('Registered User \"' + str_name + '\", your ID is ' + str(get_user(str_id, testdict)["id"]))
 		
     if message.content.startswith('!quit'):
         sys.exit()
         
-    if message.content.startswith('!list'):
+    if message.content.startswith('!players') or message.content.startswith('!list'):
         all = "```\n" + user_header;
                 
         elo_unsort = []
@@ -105,8 +128,20 @@ async def on_message(message):
         
         await message.channel.send(all)
         
+    if message.content.startswith("!unregister"):
+        if str_id in testdict["users"]:
+            del testdict["users"][str_id]
+            await message.channel.send("Goodbye! :)")
+        else:
+            await message.channel.send("Ur already ded 2 me")
+        
+        write(testdict)
+        
     if message.content.startswith('!join '):
         post_split = message.content.split()
+        
+        if str_id not in testdict["users"]:
+            await force_registration(message)
         
         if len(post_split) == 2:
             team_name = post_split[1]
@@ -120,11 +155,14 @@ async def on_message(message):
             await message.channel.send('!maketeam <single_word>')
             
     if message.content.startswith("!leave"):
+        if str_id not in testdict["users"]:
+            return
+    
         testdict["users"][str_id]["team"] = ""
         write(testdict)
             
     if message.content.startswith('!teams'):
-        formatted = "```Team / Users / ELO\n"
+        formatted = "```Team / Members / ELO\n"
 
         totals = get_teams_info(testdict)
         
@@ -147,14 +185,14 @@ async def on_message(message):
         elo_sorted = sorted(elo_unsort, key=get_elo, reverse=True)
 
         for value in elo_sorted:
-            lformat = value["name"] + ": " + str(value["users"]) + " / " + str(round(value["elo"]))
+            lformat = value["name"] + " / " + format_users(value["users"]) + " / " + str(round(value["elo"]))
                     
             formatted = formatted + lformat + "\n"
             
         formatted = formatted + "\n```"
             
         await message.channel.send(formatted)
-        
+
     if message.content.startswith("!victory "):
         post_split = message.content.split()
     
@@ -170,9 +208,11 @@ async def on_message(message):
             
             if team_1 not in totals["elo"]:
                 await message.channel.send("Team 1 is bad")
+                return
             
             if team_2 not in totals["elo"]:
                 await message.channel.send("Team 2 is bad")
+                return
                 
             if len(totals["teams"][team_1]) == 0 or len(totals["teams"][team_2]) == 0:
                 await message.channel.send("No players in team")
