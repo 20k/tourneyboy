@@ -124,9 +124,13 @@ async def on_message(message):
         sys.exit()
         
     if message.content.startswith('!players') or message.content.startswith('!list'):
-        all = "```\n" + user_header;
+        formatted = "```";
                 
         elo_unsort = []
+        
+        dusers = ["Name"]
+        dnames = ["Team"]
+        delo = ["Elo"]
         
         for key, value in testdict["users"].items():
             elo_unsort.append(value)
@@ -134,12 +138,17 @@ async def on_message(message):
         elo_sorted = sorted(elo_unsort, key=get_elo, reverse=True)
         
         for value in elo_sorted:
-            cur = value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"]))
-            all = all + cur + "\n"
+            #cur = value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"]))
+            dusers.append(value["name"] + "#" + value["id"])
+            dnames.append(value["team"])
+            delo.append(str(round(value["elo"])))
+
+        for i in range(0, len(dnames)):
+            formatted = formatted + format(dusers[i], dusers) + " / " + format(dnames[i], dnames) + " / " + format(delo[i], delo) + "\n"
                     
-        all = all + "\n```"            
+        formatted = formatted + "```"            
         
-        await message.channel.send(all)
+        await message.channel.send(formatted)
         
     if message.content.startswith("!unregister"):
         if str_id in testdict["users"]:
