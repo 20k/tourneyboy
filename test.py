@@ -35,7 +35,7 @@ def get_expected_elo(my_elo, their_elo):
     
 #my score is 1 for a victory, 0.5 for a tie, and 0 for a loss
 def get_next_elo(my_elo, their_elo, my_score):
-    return my_elo + 100 * (my_score - get_expected_elo(my_elo, their_elo))
+    return my_elo + 80 * (my_score - get_expected_elo(my_elo, their_elo))
     
 def get_teams_info(x):
     teams = {}
@@ -95,9 +95,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-        
-    user_header = "Name / Team / Elo\n"
-        
+                
     str_id = str(message.author.id)
     str_name = message.author.name;
     
@@ -120,7 +118,6 @@ async def on_message(message):
             formatted = formatted + "```"            
             
             await message.channel.send(formatted)
-            #await message.channel.send("```\n" + user_header + value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"])) + "```")
         else:
             await message.channel.send("Not found, !register first?")
 
@@ -151,7 +148,6 @@ async def on_message(message):
         elo_sorted = sorted(elo_unsort, key=get_elo, reverse=True)
         
         for value in elo_sorted:
-            #cur = value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"]))
             dusers.append(value["name"] + "#" + value["id"])
             dnames.append(value["team"])
             delo.append(str(round(value["elo"])))
