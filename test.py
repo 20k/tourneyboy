@@ -63,6 +63,19 @@ def format_users(x):
         rval = rval[:-1]
         
     return rval
+    
+def format(in_val, all_vals):
+    max_length = 0
+    
+    for value in all_vals:
+        if len(value) > max_length:
+            max_length = len(value)
+            
+    my_len = len(in_val)
+    for i in range(my_len, max_length):
+        in_val = in_val + " "
+        
+    return in_val
 
 async def force_registration(message):
     backupcontent = message.content
@@ -160,9 +173,9 @@ async def on_message(message):
     
         testdict["users"][str_id]["team"] = ""
         write(testdict)
-            
+
     if message.content.startswith('!teams'):
-        formatted = "```Team / Members / ELO\n"
+        formatted = "```"
 
         totals = get_teams_info(testdict)
         
@@ -183,14 +196,21 @@ async def on_message(message):
             elo_unsort.append(v)
             
         elo_sorted = sorted(elo_unsort, key=get_elo, reverse=True)
+        
+        dnames = ["Team"]
+        dusers = ["Members"]
+        delo = ["Elo"]
 
-        for value in elo_sorted:
-            lformat = value["name"] + " / " + format_users(value["users"]) + " / " + str(round(value["elo"]))
-                    
-            formatted = formatted + lformat + "\n"
+        for value in elo_sorted:         
+            dnames.append(value["name"])
+            dusers.append(format_users(value["users"]))
+            delo.append(str(round(value["elo"])))
+                     
+        for i in range(0, len(dnames)):
+            formatted = formatted + format(dnames[i], dnames) + " / " + format(dusers[i], dusers) + " / " + format(delo[i], delo) + "\n"
             
-        formatted = formatted + "\n```"
-            
+        formatted = formatted + "```"
+         
         await message.channel.send(formatted)
 
     if message.content.startswith("!victory "):
