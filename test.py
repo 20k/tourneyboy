@@ -107,7 +107,20 @@ async def on_message(message):
     if message.content.startswith("!me"):
         if str_id in testdict["users"]:
             value = testdict["users"][str_id]
-            await message.channel.send("```\n" + user_header + value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"])) + "```")
+            
+            dnames = ["Team", value["team"]]
+            dusers = ["Name", value["name"] + "#" + value["id"]]
+            delo = ["Elo", str(round(value["elo"]))]
+            
+            formatted = "```"
+            
+            for i in range(0, len(dnames)):
+                formatted = formatted + format(dusers[i], dusers) + " / " + format(dnames[i], dnames) + " / " + format(delo[i], delo) + "\n"
+                    
+            formatted = formatted + "```"            
+            
+            await message.channel.send(formatted)
+            #await message.channel.send("```\n" + user_header + value["name"] + "#" + value["id"] + " / " + value["team"] + " / " + str(round(value["elo"])) + "```")
         else:
             await message.channel.send("Not found, !register first?")
 
