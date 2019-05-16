@@ -100,7 +100,7 @@ async def on_message(message):
     str_name = message.author.name;
     
     if message.content.startswith("!help"):
-        await message.channel.send("```\n!register\n!unregister\n!players\n!join <teamname>\n!teams\n!victory <winningteam> <losingteam>\n!me\n!help```")
+        await message.channel.send("```\n!register\n!unregister\n!players\n!join <teamname>\n!leave\n!teams\n!victory <winningteam> <losingteam>\n!me\n!help\n\nUse !register to sign up, use !join to join a team, and use !victory <winningteam> <losingteam> to report a match result (only one person should do this)```")
         
     if message.content.startswith("!me"):
         if str_id in testdict["users"]:
@@ -191,6 +191,7 @@ async def on_message(message):
     
         testdict["users"][str_id]["team"] = ""
         write(testdict)
+        await message.channel.send("Left team")
 
     if message.content.startswith('!teams'):
         formatted = "```"
@@ -206,9 +207,12 @@ async def on_message(message):
             
             if key == "":
                 continue
+                
+            if len(totals["teams"][key]) == 0:
+                continue
         
             v["users"] = value
-            v["elo"] = team_elo_total[key]
+            v["elo"] = team_elo_total[key] / len(totals["teams"][key])
             v["name"] = key;
         
             elo_unsort.append(v)
